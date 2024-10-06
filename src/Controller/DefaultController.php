@@ -3,6 +3,8 @@
 // src/Controller/DefaultController.php
 namespace App\Controller;
 
+use App\Service\GreetingService;
+use App\Service\IsPrimeService;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -10,10 +12,20 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class DefaultController  extends AbstractController
 {
+    private GreetingService $greetingService;
+    private IsPrimeService $isPrimeService;
+
+    public function __construct(GreetingService $greetingService, IsPrimeService $isPrimeService)
+    {
+        $this->greetingService = $greetingService;
+        $this->isPrimeService = $isPrimeService;
+    }
+
     #[Route('/prime/{number}', methods: ["GET"])]
     public function checkPrimeNumber($number): JsonResponse
     {
-        $isPrime = $this->isPrime($number);
+        $isPrime = $this->isPrimeService->isPrime($number);
+
 
         return new JsonResponse([
             'number' => $number,
@@ -21,24 +33,7 @@ class DefaultController  extends AbstractController
             'message' => $isPrime ? 'Это простое число' : 'Это составное число'
         ]);
     }
-    private function isPrime(int $number): bool
-    {
-        if ($number <= 1) {
-            return false;
-        }
-        if ($number == 2) {
-            return true;
-        }
-        if ($number % 2 == 0) {
-            return false;
-        }
-        for ($i = 3; $i <= sqrt($number); $i += 2) {
-            if ($number % $i == 0) {
-                return false;
-            }
-        }
-        return true;
-    }
+
 
     #[Route('/hello/{name}', methods: ['GET'])]
     public function index(string $name): Response
@@ -51,5 +46,13 @@ class DefaultController  extends AbstractController
     public function simple(): Response
     {
         return new Response('Simple! Easy! Great!');
+    }
+    // 
+    #[Route('/greet/{name}', name: 'app_greet')]
+    public function greet(string $name): Response
+    {
+        $message = $this->greetingService->getGreeting($name);
+
+        return new Response($message);
     }
 }
