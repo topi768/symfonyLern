@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:8.1-fpm
+    container_name: symfony_php
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    depends_on:
+      - db
+    networks:
+      - symfony_network
+
+  web:
+    image: nginx:alpine
+    container_name: symfony_nginx
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
+    networks:
+      - symfony_network
+
+  db:
+    image: mysql:5.7
+    container_name: symfony_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: symfony_project
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - symfony_network
+
+volumes:
+  mysql_data:
+
+networks:
+  symfony_network:
